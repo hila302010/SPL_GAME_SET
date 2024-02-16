@@ -1,6 +1,12 @@
 package bguspl.set.ex;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.swing.text.html.HTMLDocument.Iterator;
+
 import bguspl.set.Env;
+
 
 /**
  * This class manages the players' threads and data
@@ -50,6 +56,11 @@ public class Player implements Runnable {
      */
     private int score;
 
+
+    //FIELDS WE ADDED:
+    private BlockingQueue<Integer> actions;//the slots chosen by the player, max size=3;
+    //private final BlockingQueue<Integer> cardsTodo;
+    //private final BlockingQueue[] Todo;
     /**
      * The class constructor.
      *
@@ -64,6 +75,7 @@ public class Player implements Runnable {
         this.table = table;
         this.id = id;
         this.human = human;
+        actions=new LinkedBlockingQueue<>();
     }
 
     /**
@@ -73,12 +85,16 @@ public class Player implements Runnable {
     public void run() {
         playerThread = Thread.currentThread();
         env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
-        if (!human) createArtificialIntelligence();
+        if (!human) 
+            createArtificialIntelligence();
 
         while (!terminate) {
             // TODO implement main player loop
         }
-        if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
+        if (!human)
+         try { 
+            aiThread.join(); 
+         } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
     }
 
@@ -106,6 +122,7 @@ public class Player implements Runnable {
      */
     public void terminate() {
         // TODO implement
+        terminate = true;
     }
 
     /**
@@ -115,6 +132,20 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
+        if(table.slotToCard[slot]!=null && actions.size()<3)
+        {
+            if(!actions.contains(slot))
+            {
+                actions.add(slot);
+                table.placeToken(id,slot);
+            }
+            else  
+            {
+                actions.remove(slot);
+                table.removeToken(id,slot);
+            }  
+        }
+       //we need to add the key to a queue that saves 
     }
 
     /**
@@ -124,10 +155,18 @@ public class Player implements Runnable {
      * @post - the player's score is updated in the ui.
      */
     public void point() {
-        // TODO implement
 
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
+
+           // TODO implement
+           score++;
+           //remove all token of this player from the table
+           
+           actions.clear();//blocking queue should be empty
+           //freezing the thread
+           //table.removeToken();
+   
     }
 
     /**
@@ -135,6 +174,13 @@ public class Player implements Runnable {
      */
     public void penalty() {
         // TODO implement
+        //freezing the thread 
+        //remove all tokens of this player from the table
+        actions.clear(); //blocking queue should be empty
+        //long i=3;
+        //playerThread.sleep(i);
+        //Thread.sleep(3);
+        
     }
 
     public int score() {
