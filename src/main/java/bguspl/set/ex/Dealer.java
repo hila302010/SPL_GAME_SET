@@ -102,6 +102,18 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         // TODO implement
+        // chech if there are any empty slots
+        if(table.countCards()<12)
+        {
+            for(int i = 0; i<table.slotToCard.length; i++)
+            {
+                if(table.slotToCard[i] == null && !deck.isEmpty())
+                {
+                    table.placeCard( deck.get(0), i);
+                    deck.remove(0);
+                }
+            }
+        }
     }
 
     /**
