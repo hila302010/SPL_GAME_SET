@@ -3,6 +3,7 @@ package bguspl.set.ex;
 import bguspl.set.Env;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ public class Table {
      * Mapping between a card and the slot it is in (null if none).
      */
     protected final Integer[] cardToSlot; // slot per card (if any)
-
+    protected final List<Integer>[] tokensPerSlot;
     /**
      * Constructor for testing.
      *
@@ -37,10 +38,13 @@ public class Table {
      * @param cardToSlot - mapping between a card and the slot it is in (null if none).
      */
     public Table(Env env, Integer[] slotToCard, Integer[] cardToSlot) {
-
         this.env = env;
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
+        tokensPerSlot=new LinkedList[slotToCard.length];
+        for(int i = 0; i<tokensPerSlot.length; i++){
+            tokensPerSlot[i]=new LinkedList<Integer>();
+        }
     }
 
     /**
@@ -114,6 +118,7 @@ public class Table {
             int card=slotToCard[slot];
             slotToCard[slot]=null;
             cardToSlot[card]=null;
+            tokensPerSlot[slot].clear();
         }
     }
 
@@ -127,6 +132,7 @@ public class Table {
         if (slotToCard[slot] != null)
         {
             env.ui.placeToken(player,slot);
+            tokensPerSlot[slot].add(player);
         }
     }
 
@@ -140,8 +146,16 @@ public class Table {
         // TODO implement
         if(slotToCard[slot]==null)
             return false;
-        env.ui.removeToken(player,slot);
-        return true;
         
+        if(tokensPerSlot[slot]!=null)
+        {
+            if(tokensPerSlot[slot].contains(player))
+            {
+                tokensPerSlot[slot].remove(player);
+                env.ui.removeToken(player,slot);
+                return true;
+            }
+        }
+        return false;
     }
 }
