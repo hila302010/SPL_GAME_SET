@@ -1,0 +1,3 @@
+[20:16:50.904] [INFO   ] thread bguspl.set.Main.main() starting.
+[20:16:50.908] [SEVERE ] cannot read configuration file config.properties trying from resources.
+[20:16:50.908] [SEVERE ] configuration file was loaded from resources directory.
