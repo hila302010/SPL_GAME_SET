@@ -77,6 +77,8 @@ public class Dealer implements Runnable {
      */
     public void terminate() {
         // TODO implement
+        this.terminate=true;
+        //??? maybe
     }
 
     /**
@@ -89,7 +91,7 @@ public class Dealer implements Runnable {
     }
 
     /**
-     * Checks cards should be removed from the table and removes them.
+     * Checks cards that should be removed from the table and removes them.
      */
     private void removeCardsFromTable() {
         // TODO implement

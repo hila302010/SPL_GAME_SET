@@ -93,8 +93,9 @@ public class Table {
 
         cardToSlot[card] = slot;
         slotToCard[slot] = card;
-
+        
         // TODO implement
+        env.ui.placeCard(card,slot);
     }
 
     /**
@@ -107,6 +108,13 @@ public class Table {
         } catch (InterruptedException ignored) {}
 
         // TODO implement
+        if (slotToCard[slot] != null)
+        {
+            env.ui.removeCard(slot);
+            int card=slotToCard[slot];
+            slotToCard[slot]=null;
+            cardToSlot[card]=null;
+        }
     }
 
     /**
@@ -116,6 +124,10 @@ public class Table {
      */
     public void placeToken(int player, int slot) {
         // TODO implement
+        if (slotToCard[slot] != null)
+        {
+            env.ui.placeToken(player,slot);
+        }
     }
 
     /**
@@ -126,6 +138,10 @@ public class Table {
      */
     public boolean removeToken(int player, int slot) {
         // TODO implement
-        return false;
+        if(slotToCard[slot]==null)
+            return false;
+        env.ui.removeToken(player,slot);
+        return true;
+        
     }
 }

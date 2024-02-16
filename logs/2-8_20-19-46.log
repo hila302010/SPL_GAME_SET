@@ -1,0 +1,8 @@
+[20:19:46.191] [INFO   ] thread bguspl.set.Main.main() starting.
+[20:19:46.195] [SEVERE ] cannot read configuration file config.properties trying from resources.
+[20:19:46.196] [SEVERE ] configuration file was loaded from resources directory.
+[20:19:46.973] [INFO   ] thread dealer starting.
+[20:19:46.973] [INFO   ] thread dealer starting.
+[20:20:12.987] [SEVERE ] key 70 was pressed by player 1
+[20:20:14.448] [SEVERE ] key 74 was pressed by player 2
+[20:20:19.980] [SEVERE ] exit button pressed
