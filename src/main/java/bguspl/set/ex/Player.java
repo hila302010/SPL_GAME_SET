@@ -158,17 +158,26 @@ public class Player implements Runnable {
      */
     public void point() {
 
+        try {
+            Thread.sleep(env.config.pointFreezeMillis);
+        } catch (InterruptedException ignored) {}
+
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
 
            // TODO implement
            score++;
-           table.removeToken(id, actions.element())
+
            //remove all token of this player from the table
+           for(int i = 0; i<actions.size(); i++)
+           {
+                table.removeToken(id, (int) actions.toArray()[i]);
+           }    
            
            actions.clear();//blocking queue should be empty
            //freezing the thread
-           //table.removeToken();
+
+         
    
     }
 
@@ -177,16 +186,23 @@ public class Player implements Runnable {
      */
     public void penalty() {
         // TODO implement
+
         //freezing the thread 
-        //remove all tokens of this player from the table
-        actions.clear(); //blocking queue should be empty
-        //long i=3;
-        //playerThread.sleep(i);
-        //Thread.sleep(3);
+        try {
+            Thread.sleep(env.config.penaltyFreezeMillis);
+        } catch (InterruptedException ignored) {}
         
     }
 
     public int score() {
         return score;
+    }
+
+
+
+    public void clearPlayerTokens() {
+
+        actions.clear();//blocking queue should be empty
+   
     }
 }
