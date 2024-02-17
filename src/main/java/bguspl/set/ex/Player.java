@@ -132,6 +132,9 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
+
+        //should check whther the thread is freezed!!!!!!!!!!!!
+
         if(table.slotToCard[slot]!=null && actions.size()<3)
         {
             if(!actions.contains(slot))
@@ -145,7 +148,6 @@ public class Player implements Runnable {
                 table.removeToken(id,slot);
             }  
         }
-       //we need to add the key to a queue that saves 
     }
 
     /**
@@ -161,6 +163,7 @@ public class Player implements Runnable {
 
            // TODO implement
            score++;
+           table.removeToken(id, actions.element())
            //remove all token of this player from the table
            
            actions.clear();//blocking queue should be empty
