@@ -146,7 +146,8 @@ public class Player implements Runnable {
                     table.addPlayerWith3Tokens(id);
                 }
             }
-            else if(actions.contains(slot))
+            else 
+            if(actions.contains(slot))
             {
                 actions.remove(slot);
                 table.removeToken(id,slot);

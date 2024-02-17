@@ -103,7 +103,7 @@ public class Dealer implements Runnable {
         // TODO implement
 
         // if there is no set then remove all cards from the table 
-
+        checkSet();
 
     }
     //method we added:
@@ -128,14 +128,26 @@ public class Dealer implements Runnable {
             {
                 cards[j]=actions.get(j);
             }
-            ///>>????
             if(env.util.testSet(cards))
             {
-                for(int i = 0; i<cards.length; i++)
+                players[i].point();
+                try {
+                    Thread.sleep(env.config.pointFreezeMillis);
+                } catch (InterruptedException ignored) {}
+                for(int m = 0; m<cards.length; m++)
                 {
-                    table.removeCard(cards[i]);
+                    table.removeCard(cards[m]);
+                    table.removeToken(playerwith3,cards[m]);
+                    table.updatePlayersWith3Tokens(playerwith3);
                 }
             }
+            else{
+             players[i].penalty();
+              try {
+                Thread.sleep(env.config.penaltyFreezeMillis);
+            } catch (InterruptedException ignored) {}
+            }
+
         }
 
         // check if there is a set on the table
