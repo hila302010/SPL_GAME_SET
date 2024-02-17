@@ -181,8 +181,8 @@ public class Dealer implements Runnable {
             {
                 table.removeToken(p.id, slot);
                 p.clearPlayerTokens();
+                table.updatePlayersWith3Tokens(p.id);
             }
-
             if(table.slotToCard[slot] != null)
                 deck.add(table.slotToCard[slot]);
             table.removeCard(slot);

@@ -142,11 +142,19 @@ public class Player implements Runnable {
                 actions.add(slot);
                 table.placeToken(id,slot);
             }
-            else  
-            {
-                actions.remove(slot);
-                table.removeToken(id,slot);
-            }  
+            // else  
+            // {
+            //     actions.remove(slot);
+            //     table.removeToken(id,slot);
+            // }  
+        }
+        else  
+        {
+            actions.remove(slot);
+            table.removeToken(id,slot);
+        } 
+        if(actions.size()==3){
+            table.addPlayerWith3Tokens(id);
         }
     }
 
