@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 //IMPORTS WE ADDED:
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 /**
  * This class contains the data that is visible to the player.
@@ -33,10 +34,11 @@ public class Table {
      * Mapping between a card and the slot it is in (null if none).
      */
     protected final Integer[] cardToSlot; // slot per card (if any)
-    //protected final List<Integer>[] tokensPerSlot;
 
     //field we added
-    protected final BlockingQueue<Integer> playersWith3Tokens;
+    protected volatile BlockingQueue<Integer> playersWith3Tokens;
+    protected boolean[][] slotsOfPlayers;
+    
     /**
      * Constructor for testing.
      *
@@ -49,10 +51,15 @@ public class Table {
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
         playersWith3Tokens=new LinkedBlockingQueue<Integer>();
-        // tokensPerSlot=new LinkedList[slotToCard.length];
-        // for(int i = 0; i<tokensPerSlot.length; i++){
-        //     tokensPerSlot[i]=new LinkedList<Integer>();
-        // }
+        slotsOfPlayers= new boolean[env.config.computerPlayers+env.config.humanPlayers][slotToCard.length];
+        for(int i=0; i<slotsOfPlayers[0].length;i++)
+        {
+            for(int j=0; j<slotsOfPlayers[1].length; j++)
+            {
+                slotsOfPlayers[i][j] = false;
+            }
+        }
+        
     }
 
     /**
@@ -102,32 +109,35 @@ public class Table {
         try {
             Thread.sleep(env.config.tableDelayMillis);
         } catch (InterruptedException ignored) {}
-
-        cardToSlot[card] = slot;
-        slotToCard[slot] = card;
-        
         // TODO implement
-        env.ui.placeCard(card,slot);
+         synchronized(cardToSlot)
+         {
+            cardToSlot[card] = slot;
+            slotToCard[slot] = card;
+            env.ui.placeCard(card,slot);
+         }
     }
 
     /**
      * Removes a card from a grid slot on the table.
      * @param slot - the slot from which to remove the card.
      */
-    public void removeCard(int slot) {
+    public synchronized void removeCard(int slot) {
         try {
             Thread.sleep(env.config.tableDelayMillis);
         } catch (InterruptedException ignored) {}
-
         // TODO implement
-        if (slotToCard[slot] != null)
-        {
-            env.ui.removeCard(slot);
-            int card=slotToCard[slot];
-            slotToCard[slot]=null;
-            cardToSlot[card]=null;
-            //tokensPerSlot[slot].clear();
-        }
+            if (slotToCard[slot] != null)
+            {
+                env.ui.removeCard(slot);
+                int card=slotToCard[slot];
+                slotToCard[slot]=null;
+                cardToSlot[card]=null;
+            }
+            for(int i = 0; i < slotsOfPlayers[0].length; i++)
+            {
+                slotsOfPlayers[i][slot] = false;
+            }
     }
 
 
@@ -138,11 +148,13 @@ public class Table {
      */
     public void placeToken(int player, int slot) {
         // TODO implement
-        if (slotToCard[slot] != null)
-        {
-            env.ui.placeToken(player,slot);
-            //tokensPerSlot[slot].add(player);
-        }
+        
+            if (slotToCard[slot] != null)
+            {
+                env.ui.placeToken(player,slot);
+            }
+            slotsOfPlayers[player][slot] = true;
+        
     }
 
     /**
@@ -155,38 +167,29 @@ public class Table {
         // TODO implement
         if(slotToCard[slot]==null)
             return false;
-        
+        slotsOfPlayers[player][slot] = false;
         env.ui.removeToken(player,slot);  
         return true;
-        // if(!tokensPerSlot[slot].isEmpty())
-        // {
-        //     if(tokensPerSlot[slot].contains(player))
-        //     {
-        //         env.ui.removeToken(player,slot);
-        //         tokensPerSlot[slot].remove(player);
-        //         return true;
-        //     }
-        // }
-        //return false;
     }
 
 
 
     //methods we added
+
+    
     public BlockingQueue<Integer> getPlayersWith3Tokens() {
         return playersWith3Tokens;
     }
 
     //removing a player to the blocking queue
-    public void updatePlayersWith3Tokens(int id) {
+    public void updatePlayersWith3Tokens(int id) { 
         if(playersWith3Tokens.contains(id))
             playersWith3Tokens.remove(id);
+           
     }
     //adding a player to the blocking queue
     public void addPlayerWith3Tokens(int id) {
-        if(!playersWith3Tokens.contains(id))
+         if(!playersWith3Tokens.contains(id))
             playersWith3Tokens.add(id);
     }
-
-
 }

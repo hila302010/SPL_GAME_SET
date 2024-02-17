@@ -56,6 +56,11 @@ public class Dealer implements Runnable {
     @Override
     public void run() {
         env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
+        for(Player player : players)
+        {
+            Thread pl = new Thread(player);
+            pl.start();
+        }
         while (!shouldFinish()) {
             updateTimerDisplay(false);
             placeCardsOnTable();
@@ -83,8 +88,14 @@ public class Dealer implements Runnable {
      */
     public void terminate() {
         // TODO implement
-        this.terminate=true;
-        //??? maybe
+        synchronized(table){
+            this.terminate=true;
+            for(Player player : players)
+            {
+                player.terminate();
+            }
+            env.ui.dispose();
+        }
     }
 
     /**
@@ -102,54 +113,71 @@ public class Dealer implements Runnable {
     private void removeCardsFromTable() {
         // TODO implement
 
+        // if there is no set on the table
+        LinkedList<Integer> cardsOnTable = new LinkedList<>();
+        for(int i = 0; i < table.slotToCard.length; i++)
+        {
+            cardsOnTable.add(table.slotToCard[i]);
+        }
+        if (!(env.util.findSets(cardsOnTable, 1).size() > 0) || System.currentTimeMillis() >= reshuffleTime)
+        {
+            removeAllCardsFromTable();
+        }
+        //if there is no set in the deck
+        if (!(env.util.findSets(deck, 1).size()>0))
+        {
+            terminate();
+        }
         // if there is no set then remove all cards from the table 
         checkSet();
-
     }
     //method we added:
     //cheack if it is a set and removing if nessserry
     private void checkSet() 
     {
         int player=0;
-        Iterator<Integer> iter=table.getPlayersWith3Tokens().iterator();
-        while(iter.hasNext())
-        {
-            int playerwith3=(int)iter.next();
-            for(Player p: players)
+        synchronized(table.playersWith3Tokens){
+            Iterator<Integer> iter=table.getPlayersWith3Tokens().iterator();
+            while(iter.hasNext())
             {
-                if(p.id==playerwith3)
-                    break;
-                else
-                    player++;
-            }
-            LinkedList<Integer> actions= players[player].getActions();
-            int [] cards=new int[3];
-            for(int j=0; j< cards.length;j++)
-            {
-                cards[j]= table.slotToCard[actions.get(j)];
-            }
-            if(env.util.testSet(cards)) 
-            {
-                players[player].point();
-                try {
-                    Thread.sleep(env.config.pointFreezeMillis);
-                } catch (InterruptedException ignored) {}
-
-                // this happens in the player when he gets a point
-                /*for(int m = 0; m<cards.length; m++)
+                int playerwith3=(int)iter.next();
+                for(Player p: players)
                 {
-                    table.removeCard(cards[m]);
-                    table.removeToken(playerwith3,cards[m]);
-                    table.updatePlayersWith3Tokens(playerwith3);
-                }*/
+                    if(p.id==playerwith3)
+                        break;
+                    else
+                        player++;
+                }
+                BlockingQueue<Integer> actions= players[player].getActions();
+                int [] cards=new int[3];
+                int j = 0;
+                for(int item : actions)
+                {
+                    cards[j]= table.slotToCard[item];
+                    j++;
+                }
+                if(env.util.testSet(cards)) 
+                {
+                    players[player].point();
+                    try {
+                        Thread.sleep(env.config.pointFreezeMillis);
+                    } catch (InterruptedException ignored) {}
+                    updateTimerDisplay(true);
+                    // this happens in the player when he gets a point
+                    /*for(int m = 0; m<cards.length; m++)
+                    {
+                        table.removeCard(cards[m]);
+                        table.removeToken(playerwith3,cards[m]);
+                        table.updatePlayersWith3Tokens(playerwith3);
+                    }*/
+                }
+                else{
+                    players[player].penalty();
+                    try {
+                        Thread.sleep(env.config.penaltyFreezeMillis);
+                    } catch (InterruptedException ignored) {}
+                }
             }
-            else{
-                players[player].penalty();
-                try {
-                    Thread.sleep(env.config.penaltyFreezeMillis);
-                } catch (InterruptedException ignored) {}
-            }
-
         }
     }
 
@@ -158,7 +186,7 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         // TODO implement
-
+        synchronized(table){
         Collections.shuffle(deck);
 
         // check if there are any empty slots
@@ -173,13 +201,16 @@ public class Dealer implements Runnable {
             }
         }
     }
+    }
 
     /**
      * Sleep for a fixed amount of time or until the thread is awakened for some purpose.
      */
     private void sleepUntilWokenOrTimeout() {
         // TODO implement
-
+        try {
+            Thread.sleep(env.config.tableDelayMillis);
+        } catch (InterruptedException ignored) {}
         
     }
 
@@ -215,6 +246,7 @@ public class Dealer implements Runnable {
                 deck.add(table.slotToCard[slot]);
             table.removeCard(slot);
         }
+        
 
     }
 
