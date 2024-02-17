@@ -147,12 +147,12 @@ public class Table {
         if(slotToCard[slot]==null)
             return false;
         
-        if(tokensPerSlot[slot]!=null)
+        if(!tokensPerSlot[slot].isEmpty())
         {
             if(tokensPerSlot[slot].contains(player))
             {
-                tokensPerSlot[slot].remove(player);
                 env.ui.removeToken(player,slot);
+                tokensPerSlot[slot].remove(player);
                 return true;
             }
         }
