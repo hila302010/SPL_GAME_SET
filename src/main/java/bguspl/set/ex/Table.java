@@ -36,7 +36,7 @@ public class Table {
     //protected final List<Integer>[] tokensPerSlot;
 
     //field we added
-    private final BlockingQueue<Integer> playersWith3Tokens;
+    protected final BlockingQueue<Integer> playersWith3Tokens;
     /**
      * Constructor for testing.
      *
@@ -173,6 +173,10 @@ public class Table {
 
 
     //methods we added
+    public BlockingQueue<Integer> getPlayersWith3Tokens() {
+        return playersWith3Tokens;
+    }
+
     //removing a player to the blocking queue
     public void updatePlayersWith3Tokens(int id) {
         if(playersWith3Tokens.contains(id))

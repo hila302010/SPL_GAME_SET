@@ -3,8 +3,11 @@ package bguspl.set.ex;
 import bguspl.set.Env;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -99,29 +102,58 @@ public class Dealer implements Runnable {
     private void removeCardsFromTable() {
         // TODO implement
 
-        // check if there is a set on the table
         // if there is no set then remove all cards from the table 
-
-       /*  if(env.util.findSets(deck, 0).size() == 0)
-        {
-            removeAllCardsFromTable();
-        }*/
+        checkSet();
 
     }
+    //method we added:
+    //cheack if it is a set and removing if nessserry
+    private void checkSet() 
+    {
+        int i=0;
+        Iterator<Integer> iter=table.getPlayersWith3Tokens().iterator();
+        while(iter.hasNext())
+        {
+            int playerwith3=(int)iter.next();
+            for(Player p: players)
+            {
+                if(p.id==playerwith3)
+                    break;
+                else
+                    i++;
+            }
+            LinkedList<Integer> actions= players[i].getActions();
+            int [] cards=new int[3];
+            for(int j=0; j< cards.length;j++)
+            {
+                cards[j]=actions.get(j);
+            }
+            if(env.util.testSet(cards))
+            {
+                players[i].point();
+                try {
+                    Thread.sleep(env.config.pointFreezeMillis);
+                } catch (InterruptedException ignored) {}
+                for(int m = 0; m<cards.length; m++)
+                {
+                    table.removeCard(cards[m]);
+                    table.removeToken(playerwith3,cards[m]);
+                    table.updatePlayersWith3Tokens(playerwith3);
+                }
+            }
+            else{
+             players[i].penalty();
+              try {
+                Thread.sleep(env.config.penaltyFreezeMillis);
+            } catch (InterruptedException ignored) {}
+            }
 
-    private void removeCardsFromTable(int[] cards) {
-        // TODO implement
+        }
 
         // check if there is a set on the table
-        // if there is no set then remove all cards from the table 
         
-        if(env.util.testSet(cards));
-        {
-            for(int i = 0; i<cards.length; i++)
-            {
-                table.removeCard(cards[i]);
-            }
-        }
+        
+       
 
     }
 

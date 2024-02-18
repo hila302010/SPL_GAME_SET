@@ -1,13 +1,14 @@
 package bguspl.set.ex;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.swing.text.html.HTMLDocument.Iterator;
 
 import bguspl.set.Env;
-
-
+//imports we added
+import java.util.LinkedList;
 /**
  * This class manages the players' threads and data
  *
@@ -58,7 +59,8 @@ public class Player implements Runnable {
 
 
     //FIELDS WE ADDED:
-    private BlockingQueue<Integer> actions;//the slots chosen by the player, max size=3;
+    //private BlockingQueue<Integer> actions;//the slots chosen by the player, max size=3;
+    private LinkedList<Integer> actions;//the slots chosen by the player, max size=3;
     //private final BlockingQueue<Integer> cardsTodo;
     //private final BlockingQueue[] Todo;
     /**
@@ -75,7 +77,7 @@ public class Player implements Runnable {
         this.table = table;
         this.id = id;
         this.human = human;
-        actions=new LinkedBlockingQueue<>();
+        actions=new LinkedList<Integer>();
     }
 
     /**
@@ -133,28 +135,24 @@ public class Player implements Runnable {
     public void keyPressed(int slot) {
         // TODO implement
 
-        //should check whther the thread is freezed!!!!!!!!!!!!
-
-        if(table.slotToCard[slot]!=null && actions.size()<3)
+        //should check whther the thread is freezed!!!!!!!!!!!
+        if(table.slotToCard[slot]!=null)
         {
-            if(!actions.contains(slot))
+            if((!actions.contains(slot)) && (actions.size()<3))
             {
                 actions.add(slot);
                 table.placeToken(id,slot);
+                if(actions.size()==3){
+                    table.addPlayerWith3Tokens(id);
+                }
             }
-            // else  
-            // {
-            //     actions.remove(slot);
-            //     table.removeToken(id,slot);
-            // }  
-        }
-        else  
-        {
-            actions.remove(slot);
-            table.removeToken(id,slot);
-        } 
-        if(actions.size()==3){
-            table.addPlayerWith3Tokens(id);
+            else 
+            if(actions.contains(slot))
+            {
+                actions.remove(slot);
+                table.removeToken(id,slot);
+                table.updatePlayersWith3Tokens(id);
+            }  
         }
     }
 
@@ -166,9 +164,9 @@ public class Player implements Runnable {
      */
     public void point() {
 
-        try {
-            Thread.sleep(env.config.pointFreezeMillis);
-        } catch (InterruptedException ignored) {}
+        // try {
+        //     Thread.sleep(env.config.pointFreezeMillis);
+        // } catch (InterruptedException ignored) {}
 
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
@@ -196,9 +194,9 @@ public class Player implements Runnable {
         // TODO implement
 
         //freezing the thread 
-        try {
-            Thread.sleep(env.config.penaltyFreezeMillis);
-        } catch (InterruptedException ignored) {}
+        // try {
+        //     Thread.sleep(env.config.penaltyFreezeMillis);
+        // } catch (InterruptedException ignored) {}
         
     }
 
@@ -212,5 +210,11 @@ public class Player implements Runnable {
 
         actions.clear();//blocking queue should be empty
    
+    }
+
+    //methods we added
+    public LinkedList<Integer> getActions()
+    {
+        return actions;
     }
 }
