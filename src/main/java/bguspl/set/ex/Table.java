@@ -29,7 +29,10 @@ public class Table {
      * Mapping between a card and the slot it is in (null if none).
      */
     protected final Integer[] cardToSlot; // slot per card (if any)
-    protected final List<Integer>[] tokensPerSlot;
+    //protected final List<Integer>[] tokensPerSlot;
+
+    //field we added
+    protected final BlockingQueue<Integer> playersWith3Tokens;
     /**
      * Constructor for testing.
      *
@@ -158,4 +161,24 @@ public class Table {
         }
         return false;
     }
+
+
+
+    //methods we added
+    public BlockingQueue<Integer> getPlayersWith3Tokens() {
+        return playersWith3Tokens;
+    }
+
+    //removing a player to the blocking queue
+    public void updatePlayersWith3Tokens(int id) {
+        if(playersWith3Tokens.contains(id))
+            playersWith3Tokens.remove(id);
+    }
+    //adding a player to the blocking queue
+    public void addPlayerWith3Tokens(int id) {
+        if(!playersWith3Tokens.contains(id))
+            playersWith3Tokens.add(id);
+    }
+
+
 }
