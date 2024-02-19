@@ -110,7 +110,7 @@ public class Dealer implements Runnable {
     //cheack if it is a set and removing if nessserry
     private void checkSet() 
     {
-        int i=0;
+        int player=0;
         Iterator<Integer> iter=table.getPlayersWith3Tokens().iterator();
         while(iter.hasNext())
         {
@@ -120,41 +120,37 @@ public class Dealer implements Runnable {
                 if(p.id==playerwith3)
                     break;
                 else
-                    i++;
+                    player++;
             }
-            LinkedList<Integer> actions= players[i].getActions();
+            LinkedList<Integer> actions= players[player].getActions();
             int [] cards=new int[3];
             for(int j=0; j< cards.length;j++)
             {
-                cards[j]=actions.get(j);
+                cards[j]= table.slotToCard[actions.get(j)];
             }
-            if(env.util.testSet(cards))
+            if(env.util.testSet(cards)) 
             {
-                players[i].point();
+                players[player].point();
                 try {
                     Thread.sleep(env.config.pointFreezeMillis);
                 } catch (InterruptedException ignored) {}
-                for(int m = 0; m<cards.length; m++)
+
+                // this happens in the player when he gets a point
+                /*for(int m = 0; m<cards.length; m++)
                 {
                     table.removeCard(cards[m]);
                     table.removeToken(playerwith3,cards[m]);
                     table.updatePlayersWith3Tokens(playerwith3);
-                }
+                }*/
             }
             else{
-             players[i].penalty();
-              try {
-                Thread.sleep(env.config.penaltyFreezeMillis);
-            } catch (InterruptedException ignored) {}
+                players[player].penalty();
+                try {
+                    Thread.sleep(env.config.penaltyFreezeMillis);
+                } catch (InterruptedException ignored) {}
             }
 
         }
-
-        // check if there is a set on the table
-        
-        
-       
-
     }
 
     /**

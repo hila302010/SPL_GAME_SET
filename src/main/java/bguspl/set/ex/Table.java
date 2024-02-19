@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+//IMPORTS WE ADDED:
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 /**
  * This class contains the data that is visible to the player.
  *
@@ -44,10 +48,11 @@ public class Table {
         this.env = env;
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
-        tokensPerSlot=new LinkedList[slotToCard.length];
-        for(int i = 0; i<tokensPerSlot.length; i++){
-            tokensPerSlot[i]=new LinkedList<Integer>();
-        }
+        playersWith3Tokens=new LinkedBlockingQueue<Integer>();
+        // tokensPerSlot=new LinkedList[slotToCard.length];
+        // for(int i = 0; i<tokensPerSlot.length; i++){
+        //     tokensPerSlot[i]=new LinkedList<Integer>();
+        // }
     }
 
     /**
@@ -121,9 +126,10 @@ public class Table {
             int card=slotToCard[slot];
             slotToCard[slot]=null;
             cardToSlot[card]=null;
-            tokensPerSlot[slot].clear();
+            //tokensPerSlot[slot].clear();
         }
     }
+
 
     /**
      * Places a player token on a grid slot.
@@ -135,7 +141,7 @@ public class Table {
         if (slotToCard[slot] != null)
         {
             env.ui.placeToken(player,slot);
-            tokensPerSlot[slot].add(player);
+            //tokensPerSlot[slot].add(player);
         }
     }
 
@@ -150,16 +156,18 @@ public class Table {
         if(slotToCard[slot]==null)
             return false;
         
-        if(!tokensPerSlot[slot].isEmpty())
-        {
-            if(tokensPerSlot[slot].contains(player))
-            {
-                env.ui.removeToken(player,slot);
-                tokensPerSlot[slot].remove(player);
-                return true;
-            }
-        }
-        return false;
+        env.ui.removeToken(player,slot);  
+        return true;
+        // if(!tokensPerSlot[slot].isEmpty())
+        // {
+        //     if(tokensPerSlot[slot].contains(player))
+        //     {
+        //         env.ui.removeToken(player,slot);
+        //         tokensPerSlot[slot].remove(player);
+        //         return true;
+        //     }
+        // }
+        //return false;
     }
 
 
