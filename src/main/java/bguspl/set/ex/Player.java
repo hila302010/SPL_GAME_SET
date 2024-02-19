@@ -1,6 +1,7 @@
 package bguspl.set.ex;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -59,8 +60,11 @@ public class Player implements Runnable {
 
 
     //FIELDS WE ADDED:
-    //private BlockingQueue<Integer> actions;//the slots chosen by the player, max size=3;
-    private LinkedList<Integer> actions;//the slots chosen by the player, max size=3;
+    private boolean freezeForPoint=false;
+    private boolean freezeForPenalty=false;
+    private  long freezeTime;
+    private  long freezeCurrentTime;
+    private BlockingQueue<Integer> actions;//the slots chosen by the player, max size=3;
     //private final BlockingQueue<Integer> cardsTodo;
     //private final BlockingQueue[] Todo;
     /**
@@ -77,8 +81,7 @@ public class Player implements Runnable {
         this.table = table;
         this.id = id;
         this.human = human;
-        actions=new LinkedList<Integer>();
-        
+        actions=new LinkedBlockingQueue<Integer>(env.config.featureSize);
     }
 
     /**
@@ -92,7 +95,48 @@ public class Player implements Runnable {
             createArtificialIntelligence();
 
         while (!terminate) {
-            // TODO implement main player loop
+        // TODO implement main player loop
+          synchronized(actions) {
+            try{
+                actions.wait();
+            }catch(InterruptedException e){}
+
+            for(int slot : actions)
+            {
+                if(table.slotToCard[slot]!=null) // there is a card in this slot
+                {
+                    if((!actions.contains(slot)) && (actions.size()<3))
+                    {
+                        // if the player didn't pick this slot yet
+                        actions.add(slot);
+                        table.placeToken(id,slot);
+                        if(actions.size()==3){
+                            table.addPlayerWith3Tokens(id);
+                        }
+                    }
+                    else 
+                    if(actions.contains(slot))
+                    {
+                        // if the player picked this slot before
+                        // linkded list removes by index
+                        for(int item : actions)
+                        {
+                            if(item == slot)
+                            {
+                                actions.remove(item);
+                            }
+                        }
+                        table.removeToken(id,slot);
+                        table.updatePlayersWith3Tokens(id);
+                    }  
+                }
+            }
+
+
+
+          }
+
+
         }
         if (!human)
          try { 
@@ -111,9 +155,17 @@ public class Player implements Runnable {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
             while (!terminate) {
                 // TODO implement player key press simulator
-                try {
-                    synchronized (this) { wait(); }
-                } catch (InterruptedException ignored) {}
+                try{
+                    Thread.sleep(1000);
+                }catch (InterruptedException ignored) {}
+                // try {
+                //     synchronized (this) { 
+                //         wait(); 
+                //     }
+                // } catch (InterruptedException ignored) {}
+                Random rnd = new Random();
+                int rand = rnd.nextInt(12);
+                keyPressed(rand);
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
@@ -126,6 +178,8 @@ public class Player implements Runnable {
     public void terminate() {
         // TODO implement
         terminate = true;
+        playerThread.interrupt();
+        // interupt
     }
 
     /**
@@ -136,34 +190,45 @@ public class Player implements Runnable {
     public void keyPressed(int slot) {
         // TODO implement
 
-        //should check if the thread is freezed!!!!!!!!!!!
-        if(table.slotToCard[slot]!=null) // there is a card in this slot
+        if(!freezeForPenalty && !freezeForPoint)
         {
-            if((!actions.contains(slot)) && (actions.size()<3))
+            synchronized(actions)
             {
-                // if the player didn't pick this slot yet
-                actions.add(slot);
-                table.placeToken(id,slot);
-                if(actions.size()==3){
-                    table.addPlayerWith3Tokens(id);
+                if((!actions.contains(slot)) && (actions.size()<3))
+                {
+                  // if the player didn't pick this slot yet
+                     actions.add(slot);
+                     actions.notifyAll();
                 }
             }
-            else 
-            if(actions.contains(slot))
-            {
-                // if the player picked this slot before
-                // linkded list removes by index
-                for(int i = 0; i < actions.size(); i++)
-                {
-                    if(actions.get(i) == slot)
-                    {
-                        actions.remove(i);
-                    }
-                }
-                table.removeToken(id,slot);
-                table.updatePlayersWith3Tokens(id);
-            }  
         }
+        // if(table.slotToCard[slot]!=null) // there is a card in this slot
+        // {
+        //     if((!actions.contains(slot)) && (actions.size()<3))
+        //     {
+        //         // if the player didn't pick this slot yet
+        //         actions.add(slot);
+        //         table.placeToken(id,slot);
+        //         if(actions.size()==3){
+        //             table.addPlayerWith3Tokens(id);
+        //         }
+        //     }
+        //     else 
+        //     if(actions.contains(slot))
+        //     {
+        //         // if the player picked this slot before
+        //         // linkded list removes by index
+        //         for(int item : actions)
+        //         {
+        //             if(item == slot)
+        //             {
+        //                 actions.remove(item);
+        //             }
+        //         }
+        //         table.removeToken(id,slot);
+        //         table.updatePlayersWith3Tokens(id);
+        //     }  
+        // }
     }
 
     /**
@@ -182,18 +247,16 @@ public class Player implements Runnable {
         env.ui.setScore(id, ++score);
 
            // TODO implement
-           score++;
-
+           freezeForPoint=true;
+           updateTimerDisplay(env.config.pointFreezeMillis);
            //remove all tokens of this player from the table
-           for(int i = 0; i<actions.size(); i++)
+           for(int slot : actions)
            {
-                table.removeToken(id, actions.get(i));
-                table.removeCard(actions.get(i));
-           }    
+                table.removeToken(id, slot);
+                table.removeCard(slot);
+           }  
            table.updatePlayersWith3Tokens(id);
-           
            actions.clear();//blocking queue should be empty
-        
     }
 
     /**
@@ -201,11 +264,15 @@ public class Player implements Runnable {
      */
     public void penalty() {
         // TODO implement
+        freezeForPenalty=true;
+        updateTimerDisplay(env.config.penaltyFreezeMillis);
+        
 
         //freezing the thread 
         // try {
         //     Thread.sleep(env.config.penaltyFreezeMillis);
         // } catch (InterruptedException ignored) {}
+
         
     }
 
@@ -222,8 +289,23 @@ public class Player implements Runnable {
     }
 
     //methods we added
-    public LinkedList<Integer> getActions()
+    public BlockingQueue<Integer> getActions()
     {
         return actions;
     }
+
+    public void updateTimerDisplay(long time) {
+       
+        env.ui.setFreeze(id, time); 
+        while(time>0)
+        {
+            try{
+                Thread.sleep(env.config.pointFreezeMillis);
+            } catch (InterruptedException ignored) {}
+            time-=env.config.pointFreezeMillis;
+            env.ui.setFreeze(id, time);  
+        }
+
+    }
+
 }
