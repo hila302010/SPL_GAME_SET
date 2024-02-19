@@ -78,6 +78,7 @@ public class Player implements Runnable {
         this.id = id;
         this.human = human;
         actions=new LinkedList<Integer>();
+        
     }
 
     /**
@@ -135,11 +136,12 @@ public class Player implements Runnable {
     public void keyPressed(int slot) {
         // TODO implement
 
-        //should check whther the thread is freezed!!!!!!!!!!!
-        if(table.slotToCard[slot]!=null)
+        //should check if the thread is freezed!!!!!!!!!!!
+        if(table.slotToCard[slot]!=null) // there is a card in this slot
         {
             if((!actions.contains(slot)) && (actions.size()<3))
             {
+                // if the player didn't pick this slot yet
                 actions.add(slot);
                 table.placeToken(id,slot);
                 if(actions.size()==3){
@@ -149,7 +151,15 @@ public class Player implements Runnable {
             else 
             if(actions.contains(slot))
             {
-                actions.remove(slot);
+                // if the player picked this slot before
+                // linkded list removes by index
+                for(int i = 0; i < actions.size(); i++)
+                {
+                    if(actions.get(i) == slot)
+                    {
+                        actions.remove(i);
+                    }
+                }
                 table.removeToken(id,slot);
                 table.updatePlayersWith3Tokens(id);
             }  
@@ -174,17 +184,16 @@ public class Player implements Runnable {
            // TODO implement
            score++;
 
-           //remove all token of this player from the table
+           //remove all tokens of this player from the table
            for(int i = 0; i<actions.size(); i++)
            {
-                table.removeToken(id, (int) actions.toArray()[i]);
+                table.removeToken(id, actions.get(i));
+                table.removeCard(actions.get(i));
            }    
+           table.updatePlayersWith3Tokens(id);
            
            actions.clear();//blocking queue should be empty
-           //freezing the thread
-
-         
-   
+        
     }
 
     /**
