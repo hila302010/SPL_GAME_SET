@@ -52,9 +52,9 @@ public class Table {
         this.cardToSlot = cardToSlot;
         playersWith3Tokens=new LinkedBlockingQueue<Integer>();
         slotsOfPlayers= new boolean[env.config.computerPlayers+env.config.humanPlayers][slotToCard.length];
-        for(int i=0; i<slotsOfPlayers[0].length;i++)
+        for(int i=0; i<slotsOfPlayers.length;i++)
         {
-            for(int j=0; j<slotsOfPlayers[1].length; j++)
+            for(int j=0; j<slotsOfPlayers[i].length; j++)
             {
                 slotsOfPlayers[i][j] = false;
             }
@@ -134,7 +134,7 @@ public class Table {
                 slotToCard[slot]=null;
                 cardToSlot[card]=null;
             }
-            for(int i = 0; i < slotsOfPlayers[0].length; i++)
+            for(int i = 0; i < slotsOfPlayers.length; i++)
             {
                 slotsOfPlayers[i][slot] = false;
             }
@@ -175,7 +175,18 @@ public class Table {
 
 
     //methods we added
-
+    public int getNumberOfTokens(int id)
+    {
+        int tokens = 0;
+        for(int slot = 0; slot < slotsOfPlayers[id].length; slot++)
+        {
+            if(slotsOfPlayers[id][slot] == true)
+            {
+                tokens++;
+            }
+        }
+        return tokens;
+    }
     
     public BlockingQueue<Integer> getPlayersWith3Tokens() {
         return playersWith3Tokens;
