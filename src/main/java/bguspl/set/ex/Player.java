@@ -62,8 +62,8 @@ public class Player implements Runnable {
     //FIELDS WE ADDED:
     private boolean freezeForPoint=false;
     private boolean freezeForPenalty=false;
-    private  long freezeTime;
-    private  long freezeCurrentTime;
+    //private  long freezeTime;
+    //private  long freezeCurrentTime;
     private BlockingQueue<Integer> actions;//the slots chosen by the player, max size=3;
     //private final BlockingQueue<Integer> cardsTodo;
     //private final BlockingQueue[] Todo;
@@ -103,7 +103,15 @@ public class Player implements Runnable {
 
             for(int slot : actions)
             {
-                if(table.slotToCard[slot]!=null) // there is a card in this slot
+                if(!table.slotsOfPlayers[id][slot])
+                {
+                    table.placeToken(id, slot);
+                }
+                else{
+                    table.removeToken(id, slot);
+                }
+                actions.remove();
+                /*if(table.slotToCard[slot]!=null) // there is a card in this slot
                 {
                     if((!actions.contains(slot)) && (actions.size()<3))
                     {
@@ -129,11 +137,19 @@ public class Player implements Runnable {
                         table.removeToken(id,slot);
                         table.updatePlayersWith3Tokens(id);
                     }  
-                }
+                }*/
             }
 
+          }
 
-
+          synchronized(this){
+            if(table.getNumberOfTokens(id) == env.config.featureSize){
+                table.addPlayerWith3Tokens(id);
+                try{
+                    this.wait();
+                }catch(InterruptedException e){}
+            }
+            
           }
 
 
@@ -202,6 +218,7 @@ public class Player implements Runnable {
                 }
             }
         }
+
         // if(table.slotToCard[slot]!=null) // there is a card in this slot
         // {
         //     if((!actions.contains(slot)) && (actions.size()<3))

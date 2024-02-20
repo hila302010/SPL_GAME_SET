@@ -135,30 +135,40 @@ public class Dealer implements Runnable {
     //cheack if it is a set and removing if nessserry
     private void checkSet() 
     {
-        int player=0;
+  
         synchronized(table.playersWith3Tokens){
             Iterator<Integer> iter=table.getPlayersWith3Tokens().iterator();
             while(iter.hasNext())
             {
                 int playerwith3=(int)iter.next();
+                int playerId=0;
                 for(Player p: players)
                 {
                     if(p.id==playerwith3)
                         break;
                     else
-                        player++;
+                    playerId++;
                 }
-                BlockingQueue<Integer> actions= players[player].getActions();
+                //BlockingQueue<Integer> actions= players[player].getActions();
                 int [] cards=new int[3];
-                int j = 0;
+                int i = 0;
+                for(int slot = 0; slot < table.slotsOfPlayers[playerId].length; slot++)
+                {
+                    if(table.slotsOfPlayers[playerId][slot])
+                    {
+                        cards[i] = table.slotToCard[slot];
+                        i++;
+                    }
+                }
+                /*int j = 0;
                 for(int item : actions)
                 {
                     cards[j]= table.slotToCard[item];
                     j++;
-                }
+                }*/
                 if(env.util.testSet(cards)) 
                 {
-                    players[player].point();
+                    players[playerId].point();
                     try {
                         Thread.sleep(env.config.pointFreezeMillis);
                     } catch (InterruptedException ignored) {}
@@ -172,7 +182,7 @@ public class Dealer implements Runnable {
                     }*/
                 }
                 else{
-                    players[player].penalty();
+                    players[playerId].penalty();
                     try {
                         Thread.sleep(env.config.penaltyFreezeMillis);
                     } catch (InterruptedException ignored) {}
